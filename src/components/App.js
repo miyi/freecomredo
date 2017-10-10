@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import gql from 'graphql-tag'
-import { graphql } from 'react-apollo'
+import { graphql, withApollo } from 'react-apollo'
 
 import cx from 'classnames'
 import './App.css'
@@ -194,6 +194,16 @@ class App extends Component {
   }
 
   _loadConversations = async (customerId) => {
+    const findConversationsResult = await this.props.client.query({
+      query: findConversations,
+      variables: {
+        customerId
+      }
+    })
+    const sortedConversations = findConversationsResult.data.allConversations.slice()
+    sortedConversationsResult.sort(sortConversationByDateCreated)
+
+    const shouldOpenEmptyConversation
 
   }
 
@@ -220,4 +230,4 @@ class App extends Component {
   _togglePanel = () => this.setState({isOpen: !this.state.isOpen})
 }
 
-export default graphql(createCustomerAndFirstConversation, { name: "createCustomerAndFirstConversationMutation" })(App)
+export default withApollo(graphql(createCustomerAndFirstConversation, { name: "createCustomerAndFirstConversationMutation" })(App))
