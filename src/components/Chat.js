@@ -66,7 +66,9 @@ class Chat extends Component {
             className='loading' />
         </div>
       )
-    }
+		}
+		
+		console.log('data structure: ', this.props.allMessagesQuery)
 
     return (
       <Dropzone
@@ -96,13 +98,6 @@ class Chat extends Component {
   }
 
   _onSend = () => {
-    // console.debug('Send message: ', this.state.message, this.props.conversationId, this.props.createMessageMutation)
-    // this.props.createMessageMutation({
-    //   variables: {
-    //     text: this.state.message,
-    //     conversationId: this.props.conversationId,
-    //   }
-    // })
   }
 
   _onFileDrop = (acceptedFiles, rejectedFiles) => {
