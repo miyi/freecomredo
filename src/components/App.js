@@ -226,7 +226,7 @@ class App extends Component {
     const shouldOpenEmptyConversation =
       sortedConversations.length === 1 && sortedConversations[0].messages.length === 0
 
-    console.log(sortedConversations)
+ 
 
     this.setState({
       conversations: sortedConversations,
