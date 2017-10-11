@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import gql from 'graphql-tag'
-import { graphql, withApollo } from 'react-apollo'
+import { graphql, withApollo, compose } from 'react-apollo'
 
 import cx from 'classnames'
 import './App.css'
@@ -17,7 +17,7 @@ const createCustomerAndFirstConversation = gql`
   mutation createCustomer($name: String!) {
     createCustomer(name: $name, conversations: [
       {
-        slackChannelIndex: 1,
+        slackChannelIndex: 1, 
       }
     ]) {
       id
@@ -47,6 +47,29 @@ const findConversations = gql`
         id: $customerId
       }
     }) {
+      id
+      updatedAt
+      slackChannelIndex
+      agent {
+        id
+        slackUserName
+        imageUrl
+      }
+      messages(last: 1) {
+        id
+        text
+        createdAt
+      }
+    }
+  }
+`
+
+const createConversation = gql`
+  mutation createConversation($customerId: ID!, $slackChannelIndex: Int!) {
+    createConversation(
+    customerId: $customerId,
+    slackChannelIndex: $slackChannelIndex,
+    ) {
       id
       updatedAt
       slackChannelIndex
@@ -213,11 +236,35 @@ class App extends Component {
 
 
   _initiateNewConversation = () => {
-
+    const customerId = localStorage.getItem(FREECOM_CUSTOMER_ID_KEY)
+    const username = localStorage.getItem(FREECOM_CUSTOMER_NAME_KEY)
+    //emptyConversation is a protection mechanism that prevents users from creating too many empty conversations
+    const emptyConversation = this.state.conversations.find(c => c.messages.length === 0)
+    if (emptyConversation) {
+      this.setState({ selectedConversationId: emptyConversation.id }) 
+    } else {
+      this._createNewConversation(customerId, username)
+    }
   }
 
   _createNewConversation = async (customerId, username) => {
-
+    const channelPositions = this.state.conversations.map(c => c.slackChannelIndex)
+    const newChannelPosition = channelPositions.length === 0 ? 1 : Math.max.apply(null, channelPositions) + 1
+    console.log(channelPositions, ' : ', newChannelPosition)
+    
+    //create new conversation for the customer
+    const result = await this.props.createConversationMutation({
+      variables: {
+        customerId: customerId,
+        slackChannelIndex: newChannelPosition,
+      }
+    })
+    const conversationId = result.data.createConversation.id
+    const newConversations = this.state.conversations.concat([result.data.createConversation])
+    this.setState({
+      conversations: newConversations,
+      selectedConversationId: conversationId,
+    })
   }
 
   _onSelectConversation = (conversation) => {
@@ -235,4 +282,9 @@ class App extends Component {
   _togglePanel = () => this.setState({isOpen: !this.state.isOpen})
 }
 
-export default withApollo(graphql(createCustomerAndFirstConversation, { name: "createCustomerAndFirstConversationMutation" })(App))
+const appWithMutations = compose(
+  graphql(createCustomerAndFirstConversation, {name: 'createCustomerAndFirstConversationMutation'}),
+  graphql(createConversation, {name: 'createConversationMutation'}),
+)(App)
+
+export default withApollo(appWithMutations)
