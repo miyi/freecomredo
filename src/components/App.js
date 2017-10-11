@@ -55,7 +55,7 @@ const findConversations = gql`
         slackUserName
         imageUrl
       }
-      messages {
+      messages(last: 1) {
         id
         text
         createdAt
@@ -85,7 +85,6 @@ class App extends Component {
 
     if (customerId && username) {
       // customer already exists, find all conversations for that customer
-      console.log('running _load')
       this._loadConversations(customerId)
     } else {
       // customer doesn't exist yet, create new
@@ -177,14 +176,12 @@ class App extends Component {
 
   _setupNewCustomer = async () => {
     const username = generateShortStupidName(MAX_USERNAME_LENGTH);
-    console.log(username)
     const result = await this.props.createCustomerAndFirstConversationMutation({
       variables: {
         name: username,
       }
     })
-    const customerId = result.data.createCustomer.Id
-    console.log(result.data.createCustomer.Id)
+    const customerId = result.data.createCustomer.id
     localStorage.setItem(FREECOM_CUSTOMER_ID_KEY, customerId)
     localStorage.setItem(FREECOM_CUSTOMER_NAME_KEY, username)
     this.setState({
@@ -194,17 +191,26 @@ class App extends Component {
   }
 
   _loadConversations = async (customerId) => {
+    console.log("in _load, id ", customerId)
     const findConversationsResult = await this.props.client.query({
       query: findConversations,
       variables: {
         customerId
       }
     })
+    console.log(check)
     const sortedConversations = findConversationsResult.data.allConversations.slice()
-    sortedConversationsResult.sort(sortConversationByDateCreated)
+    findConversationsResult.sort(sortConversationByDateCreated)
 
-    const shouldOpenEmptyConversation
+    const shouldOpenEmptyConversation =
+      sortedConversations === 1 && sortedConversations[0].messages.length === 0
 
+    this.setState({
+      conversations: sortedConversations,
+      selectedConversationId: shouldOpenEmptyConversation ? sortedConversations[0].id : null,
+    })
+
+    console.log(sortedConversations)
   }
 
   _initiateNewConversation = () => {
