@@ -41,10 +41,10 @@ const createCustomerAndFirstConversation = gql`
   }
 `
 const findConversations = gql`
-  query allConversations($conversationId: ID!){
+  query allConversations($customerId: ID!){
     allConversations(filter: {
       customer: {
-        id: $conversationId
+        id: $customerId
       }
     }) {
       id
@@ -191,27 +191,24 @@ class App extends Component {
   }
 
   _loadConversations = async (customerId) => {
-    console.log("in _load, id ", customerId)
     const findConversationsResult = await this.props.client.query({
       query: findConversations,
       variables: {
         customerId
       }
     })
-    console.log(check)
     const sortedConversations = findConversationsResult.data.allConversations.slice()
-    findConversationsResult.sort(sortConversationByDateCreated)
+    sortedConversations.sort(sortConversationByDateCreated)
 
     const shouldOpenEmptyConversation =
-      sortedConversations === 1 && sortedConversations[0].messages.length === 0
+      sortedConversations.length === 1 && sortedConversations[0].messages.length === 0
 
     this.setState({
       conversations: sortedConversations,
-      selectedConversationId: shouldOpenEmptyConversation ? sortedConversations[0].id : null,
+      selectedConversationId: shouldOpenEmptyConversation ? sortedConversations[0].id : null
     })
-
-    console.log(sortedConversations)
   }
+
 
   _initiateNewConversation = () => {
 
