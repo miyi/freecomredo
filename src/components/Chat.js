@@ -67,8 +67,6 @@ class Chat extends Component {
         </div>
       )
 		}
-		
-		console.log('data structure: ', this.props.allMessagesQuery)
 
     return (
       <Dropzone
@@ -97,7 +95,13 @@ class Chat extends Component {
     )
   }
 
-  _onSend = () => {
+  _onSend = async () => {
+		this.props.createMessageMutation({
+			variables: {
+				text: this.state.message,
+				conversationId: this.props.conversationId,
+			}
+		})
   }
 
   _onFileDrop = (acceptedFiles, rejectedFiles) => {
